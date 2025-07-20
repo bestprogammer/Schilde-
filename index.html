@@ -1,52 +1,99 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Todesstern Schilde</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Todesstern mit Schild-Animation & Warnung</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
       background-color: #000;
-      font-family: Arial, sans-serif;
-      color: #fff;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      overflow: hidden;
+      font-family: Arial, sans-serif;
+      color: white;
     }
     .container {
       position: relative;
       width: 300px;
       height: 300px;
-      background: url('https://poweredtemplate.com/death-star-over-galaxy-photo-realistic-landscape-wallpaper-118047/') no-repeat center center;
+    }
+    .death-star {
+      width: 100%;
+      height: 100%;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/4/4b/Death_Star_Free.png') no-repeat center center;
       background-size: contain;
       border-radius: 50%;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-    }
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 20px;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 10px;
-      position: absolute;
-      bottom: 20px;
-      left: 0;
+      position: relative;
       z-index: 10;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
     }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 30px;
-      height: 30px;
-      background: #fff;
+    .shield-ring {
+      position: absolute;
+      border: 2px solid rgba(0, 255, 255, 0.7);
       border-radius: 50%;
-      cursor: pointer;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.7);
+      opacity: 0.8;
+      pointer-events: none;
+      animation-name: pulse;
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-out;
     }
-    input[type="range"]:focus {
-      outline: none;
+    .ring1 {
+      width: 320px;
+      height: 320px;
+      animation-delay: 0s;
+    }
+    .ring2 {
+      width: 360px;
+      height: 360px;
+      animation-delay: 1s;
+    }
+    .ring3 {
+      width: 400px;
+      height: 400px;
+      animation-delay: 2s;
+    }
+    @keyframes pulse {
+      0% {
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(0.7);
+      }
+      70% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.5);
+      }
+    }
+    @keyframes blink-red {
+      0%, 100% {
+        border-color: rgba(255, 0, 0, 0.9);
+        opacity: 0.9;
+      }
+      50% {
+        border-color: rgba(255, 0, 0, 0.1);
+        opacity: 0.1;
+      }
+    }
+    .warning {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      font-weight: bold;
+      color: red;
+      text-shadow: 0 0 10px red;
+      z-index: 30;
+      display: none;
+      user-select: none;
     }
     .label {
       position: absolute;
@@ -55,22 +102,92 @@
       transform: translateX(-50%);
       font-size: 1.5rem;
       font-weight: bold;
-      text-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);
+      z-index: 20;
+      transition: color 0.3s ease;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 20px;
+      background: rgba(0, 255, 255, 0.2);
+      border-radius: 10px;
+      position: absolute;
+      bottom: 10px;
+      left: 0;
+      z-index: 20;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 30px;
+      height: 30px;
+      background: #00ffff;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 1px solid #0ff;
+      transition: background-color 0.3s ease;
+    }
+    input[type="range"]:focus::-webkit-slider-thumb {
+      background-color: #00bfbf;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="label">Schilde</div>
-    <input type="range" min="0" max="100" value="100" id="shieldRange">
+    <div class="label">Schilde: 100%</div>
+    <div class="warning">⚠️ Achtung! Schilde kritisch! ⚠️</div>
+    <div class="shield-ring ring1"></div>
+    <div class="shield-ring ring2"></div>
+    <div class="shield-ring ring3"></div>
+    <div class="death-star"></div>
+    <input type="range" min="0" max="100" value="100" id="shieldRange" />
   </div>
 
   <script>
     const slider = document.getElementById('shieldRange');
+    const label = document.querySelector('.label');
+    const warning = document.querySelector('.warning');
+    const rings = document.querySelectorAll('.shield-ring');
+
+    function updateAnimation(value) {
+      if (value < 10) {
+        // Warnung aktivieren
+        warning.style.display = 'block';
+        label.style.color = 'red';
+
+        rings.forEach(ring => {
+          ring.style.animationName = 'blink-red';
+          ring.style.animationDuration = '1s';
+          ring.style.borderColor = 'rgba(255, 0, 0, 0.9)';
+          ring.style.opacity = '0.9';
+        });
+      } else {
+        // Warnung deaktivieren
+        warning.style.display = 'none';
+        label.style.color = 'white';
+
+        // Normale Animation anpassen
+        const duration = 10 - (value / 100) * 9; // 10s bis 1s
+        const opacity = (value / 100) * 0.8;
+
+        rings.forEach(ring => {
+          ring.style.animationName = 'pulse';
+          ring.style.animationDuration = `${duration}s`;
+          ring.style.borderColor = `rgba(0, 255, 255, ${opacity})`;
+          ring.style.opacity = opacity;
+        });
+      }
+    }
+
     slider.addEventListener('input', () => {
-      const value = slider.value;
-      document.querySelector('.label').textContent = `Schilde: ${value}%`;
+      const value = parseInt(slider.value, 10);
+      label.textContent = `Schilde: ${value}%`;
+      updateAnimation(value);
     });
+
+    // Initial setzen
+    updateAnimation(parseInt(slider.value, 10));
   </script>
 </body>
 </html>
