@@ -89,6 +89,23 @@
       color: #0ff; font-size: 1rem;
       font-family: monospace; z-index: 25;
     }
+    .fire-animation {
+  display: none;
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 250px; height: 250px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 50;
+  background: radial-gradient(circle, #ffae00 0%, #ff3300 50%, rgba(0,0,0,0.1) 100%);
+  opacity: 0.8;
+  animation: explode 1s linear forwards;
+}
+@keyframes explode {
+  0%   { opacity: 0.8; transform: translate(-50%, -50%) scale(1);}
+  60%  { opacity: 1;   transform: translate(-50%, -50%) scale(1.5);}
+  100% { opacity: 0;   transform: translate(-50%, -50%) scale(2);}
+}
   </style>
 </head>
 <body>
@@ -114,7 +131,8 @@
   const container = document.querySelector('.container');
   const alarmSound = document.getElementById('alarmSound');
   const hitSound = document.getElementById('hitSound');
-
+  const fireAnimation = document.getElementById('fireAnimation');
+    
   let inputBuffer = '';
   let inputTimeout;
   let lastInputTime = 0;
@@ -126,6 +144,10 @@
     label.textContent = `Schilde: ${value}%`;
     slider.value = value;
 
+    if (value === 0) {
+  triggerFireAnimation();
+}
+    
     if (value < 11) {
       if (!alarmPlaying) {
         alarmSound.currentTime = 0;
@@ -140,7 +162,7 @@
         ring.style.borderColor = 'rgba(255, 0, 0, 0.9)';
         ring.style.opacity = '0.9';
       });
-
+      
       if (hitPlaying) {
         hitSound.pause();
         hitPlaying = false;
@@ -195,6 +217,16 @@
     }, 3000);
   }
 
+  function triggerFireAnimation() {
+  fireAnimation.style.display = 'block';
+  fireAnimation.style.animation = 'none';
+  void fireAnimation.offsetWidth;
+  fireAnimation.style.animation = 'explode 1s linear forwards';
+  setTimeout(() => {
+    fireAnimation.style.display = 'none';
+  }, 1000);
+}  
+    
   container.addEventListener('keydown', (e) => {
     const now = Date.now();
     if (e.key >= '0' && e.key <= '9') {
