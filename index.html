@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Todesstern mit Schild-Animation & Warnung</title>
+  <title>Todesstern mit Schild-Animation & Tastatursteuerung</title>
   <style>
     body {
       margin: 0;
@@ -131,10 +131,22 @@
     input[type="range"]:focus::-webkit-slider-thumb {
       background-color: #00bfbf;
     }
+    .input-feedback {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #0ff;
+      font-size: 1rem;
+      font-family: monospace;
+      user-select: none;
+      z-index: 25;
+      letter-spacing: 3px;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" tabindex="0">
     <div class="label">Schilde: 100%</div>
     <div class="warning">⚠️ Achtung! Schilde kritisch! ⚠️</div>
     <div class="shield-ring ring1"></div>
@@ -142,6 +154,7 @@
     <div class="shield-ring ring3"></div>
     <div class="death-star"></div>
     <input type="range" min="0" max="100" value="100" id="shieldRange" />
+    <div class="input-feedback" id="inputFeedback"></div>
   </div>
 
   <script>
@@ -149,13 +162,16 @@
     const label = document.querySelector('.label');
     const warning = document.querySelector('.warning');
     const rings = document.querySelectorAll('.shield-ring');
+    const feedback = document.getElementById('inputFeedback');
+    const container = document.querySelector('.container');
+
+    let inputBuffer = '';
+    let inputTimeout;
 
     function updateAnimation(value) {
       if (value < 10) {
-        // Warnung aktivieren
         warning.style.display = 'block';
         label.style.color = 'red';
-
         rings.forEach(ring => {
           ring.style.animationName = 'blink-red';
           ring.style.animationDuration = '1s';
@@ -163,14 +179,10 @@
           ring.style.opacity = '0.9';
         });
       } else {
-        // Warnung deaktivieren
         warning.style.display = 'none';
         label.style.color = 'white';
-
-        // Normale Animation anpassen
         const duration = 10 - (value / 100) * 9; // 10s bis 1s
         const opacity = (value / 100) * 0.8;
-
         rings.forEach(ring => {
           ring.style.animationName = 'pulse';
           ring.style.animationDuration = `${duration}s`;
@@ -178,16 +190,73 @@
           ring.style.opacity = opacity;
         });
       }
+      label.textContent = `Schilde: ${value}%`;
+      slider.value = value;
     }
 
-    slider.addEventListener('input', () => {
-      const value = parseInt(slider.value, 10);
-      label.textContent = `Schilde: ${value}%`;
-      updateAnimation(value);
+    function processInput() {
+      if (inputBuffer === '') return;
+
+      let val = parseInt(inputBuffer, 10);
+
+      if (isNaN(val) || val < 0 || val > 100) {
+        feedback.textContent = 'Ungültige Eingabe';
+      } else {
+        updateAnimation(val);
+        feedback.textContent = '';
+      }
+      inputBuffer = '';
+    }
+
+    function resetInputTimeout() {
+      if (inputTimeout) clearTimeout(inputTimeout);
+      inputTimeout = setTimeout(() => {
+        // Automatisch nach 3 Sekunden Eingabe abschließen (falls 1 Ziffer)
+        if (inputBuffer.length === 1) {
+          processInput();
+        } else {
+          inputBuffer = '';
+          feedback.textContent = '';
+        }
+      }, 3000);
+    }
+
+    container.addEventListener('keydown', (e) => {
+      if (e.key >= '0' && e.key <= '9') {
+        // Eingabe speichern
+        if (inputBuffer.length < 2) {
+          // Sonderregel: Wenn erstes Zeichen 0, direkt auf 0 setzen
+          if (inputBuffer.length === 0 && e.key === '0') {
+            inputBuffer = '0';
+            processInput();
+            return;
+          }
+          inputBuffer += e.key;
+          feedback.textContent = `Eingabe: ${inputBuffer}`;
+          if (inputBuffer.length === 2) {
+            processInput();
+          } else {
+            resetInputTimeout();
+          }
+        }
+      } else if (e.key === 'Escape') {
+        // Eingabe abbrechen
+        inputBuffer = '';
+        feedback.textContent = '';
+      }
     });
 
-    // Initial setzen
+    // Fokus auf Container, damit Tastatur-Events funktionieren
+    container.focus();
+
+    // Initiales Setup
     updateAnimation(parseInt(slider.value, 10));
+
+    // Update auch, wenn Regler mit Maus bewegt wird
+    slider.addEventListener('input', () => {
+      const val = parseInt(slider.value, 10);
+      updateAnimation(val);
+    });
   </script>
 </body>
 </html>
