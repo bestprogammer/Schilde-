@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Todesstern mit Schild-Animation & Tastatursteuerung</title>
+  <title>Todesstern Schildsteuerung</title>
   <style>
     body {
       margin: 0;
@@ -43,105 +43,51 @@
       animation-iteration-count: infinite;
       animation-timing-function: ease-out;
     }
-    .ring1 {
-      width: 320px;
-      height: 320px;
-      animation-delay: 0s;
-    }
-    .ring2 {
-      width: 360px;
-      height: 360px;
-      animation-delay: 1s;
-    }
-    .ring3 {
-      width: 400px;
-      height: 400px;
-      animation-delay: 2s;
-    }
+    .ring1 { width: 320px; height: 320px; animation-delay: 0s; }
+    .ring2 { width: 360px; height: 360px; animation-delay: 1s; }
+    .ring3 { width: 400px; height: 400px; animation-delay: 2s; }
     @keyframes pulse {
-      0% {
-        opacity: 0.8;
-        transform: translate(-50%, -50%) scale(0.7);
-      }
-      70% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(1.5);
-      }
-      100% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(1.5);
-      }
+      0% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.7); }
+      70% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
     }
     @keyframes blink-red {
-      0%, 100% {
-        border-color: rgba(255, 0, 0, 0.9);
-        opacity: 0.9;
-      }
-      50% {
-        border-color: rgba(255, 0, 0, 0.1);
-        opacity: 0.1;
-      }
+      0%, 100% { border-color: rgba(255, 0, 0, 0.9); opacity: 0.9; }
+      50% { border-color: rgba(255, 0, 0, 0.1); opacity: 0.1; }
     }
     .warning {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 2rem;
-      font-weight: bold;
-      color: red;
-      text-shadow: 0 0 10px red;
-      z-index: 30;
-      display: none;
-      user-select: none;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      font-size: 2rem; font-weight: bold; color: red;
+      text-shadow: 0 0 10px red; z-index: 30; display: none;
     }
     .label {
       position: absolute;
-      top: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 1.5rem;
-      font-weight: bold;
+      top: 10px; left: 50%; transform: translateX(-50%);
+      font-size: 1.5rem; font-weight: bold;
       text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);
-      z-index: 20;
-      transition: color 0.3s ease;
+      z-index: 20; transition: color 0.3s ease;
     }
     input[type="range"] {
       -webkit-appearance: none;
-      width: 100%;
-      height: 20px;
+      width: 100%; height: 20px;
       background: rgba(0, 255, 255, 0.2);
       border-radius: 10px;
-      position: absolute;
-      bottom: 10px;
-      left: 0;
-      z-index: 20;
-      cursor: pointer;
+      position: absolute; bottom: 10px; left: 0;
+      z-index: 20; cursor: pointer;
     }
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 30px;
-      height: 30px;
+      width: 30px; height: 30px;
       background: #00ffff;
       border-radius: 50%;
-      cursor: pointer;
       border: 1px solid #0ff;
-      transition: background-color 0.3s ease;
-    }
-    input[type="range"]:focus::-webkit-slider-thumb {
-      background-color: #00bfbf;
     }
     .input-feedback {
       position: absolute;
-      bottom: 50px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #0ff;
-      font-size: 1rem;
-      font-family: monospace;
-      user-select: none;
-      z-index: 25;
-      letter-spacing: 3px;
+      bottom: 50px; left: 50%; transform: translateX(-50%);
+      color: #0ff; font-size: 1rem;
+      font-family: monospace; z-index: 25;
     }
   </style>
 </head>
@@ -155,8 +101,9 @@
     <div class="death-star"></div>
     <input type="range" min="0" max="100" value="100" id="shieldRange" />
     <div class="input-feedback" id="inputFeedback"></div>
+    <audio id="alarmSound" src="https://freesound.org/data/previews/341/341695_6266111-lq.mp3"></audio>
+    <audio id="hitSound" src="https://freesound.org/data/previews/103/103046_861714-lq.mp3"></audio>
   </div>
-
   <script>
     const slider = document.getElementById('shieldRange');
     const label = document.querySelector('.label');
@@ -164,12 +111,24 @@
     const rings = document.querySelectorAll('.shield-ring');
     const feedback = document.getElementById('inputFeedback');
     const container = document.querySelector('.container');
+    const alarmSound = document.getElementById('alarmSound');
+    const hitSound = document.getElementById('hitSound');
 
     let inputBuffer = '';
     let inputTimeout;
+    let lastInputTime = 0;
+    let wasBelowThreshold = false;
 
     function updateAnimation(value) {
-      if (value < 10) {
+      label.textContent = `Schilde: ${value}%`;
+      slider.value = value;
+
+      if (value < 9) {
+        if (!wasBelowThreshold) {
+          alarmSound.currentTime = 0;
+          alarmSound.play();
+          wasBelowThreshold = true;
+        }
         warning.style.display = 'block';
         label.style.color = 'red';
         rings.forEach(ring => {
@@ -179,9 +138,10 @@
           ring.style.opacity = '0.9';
         });
       } else {
+        wasBelowThreshold = false;
         warning.style.display = 'none';
         label.style.color = 'white';
-        const duration = 10 - (value / 100) * 9; // 10s bis 1s
+        const duration = 10 - (value / 100) * 9;
         const opacity = (value / 100) * 0.8;
         rings.forEach(ring => {
           ring.style.animationName = 'pulse';
@@ -189,21 +149,23 @@
           ring.style.borderColor = `rgba(0, 255, 255, ${opacity})`;
           ring.style.opacity = opacity;
         });
+        hitSound.currentTime = 0;
+        hitSound.play();
       }
-      label.textContent = `Schilde: ${value}%`;
-      slider.value = value;
     }
 
     function processInput() {
-      if (inputBuffer === '') return;
-
-      let val = parseInt(inputBuffer, 10);
-
-      if (isNaN(val) || val < 0 || val > 100) {
-        feedback.textContent = 'Ungültige Eingabe';
-      } else {
-        updateAnimation(val);
+      if (inputBuffer === '00') {
+        updateAnimation(100);
         feedback.textContent = '';
+      } else {
+        let val = parseInt(inputBuffer, 10);
+        if (!isNaN(val) && val >= 0 && val <= 100) {
+          updateAnimation(val);
+          feedback.textContent = '';
+        } else {
+          feedback.textContent = 'Ungültige Eingabe';
+        }
       }
       inputBuffer = '';
     }
@@ -211,52 +173,37 @@
     function resetInputTimeout() {
       if (inputTimeout) clearTimeout(inputTimeout);
       inputTimeout = setTimeout(() => {
-        // Automatisch nach 3 Sekunden Eingabe abschließen (falls 1 Ziffer)
-        if (inputBuffer.length === 1) {
+        if (inputBuffer.length > 0) {
           processInput();
-        } else {
-          inputBuffer = '';
-          feedback.textContent = '';
         }
       }, 3000);
     }
 
     container.addEventListener('keydown', (e) => {
+      const now = Date.now();
       if (e.key >= '0' && e.key <= '9') {
-        // Eingabe speichern
-        if (inputBuffer.length < 2) {
-          // Sonderregel: Wenn erstes Zeichen 0, direkt auf 0 setzen
-          if (inputBuffer.length === 0 && e.key === '0') {
-            inputBuffer = '0';
-            processInput();
-            return;
-          }
-          inputBuffer += e.key;
-          feedback.textContent = `Eingabe: ${inputBuffer}`;
-          if (inputBuffer.length === 2) {
-            processInput();
-          } else {
-            resetInputTimeout();
-          }
+        inputBuffer += e.key;
+        feedback.textContent = `Eingabe: ${inputBuffer}`;
+        if (inputBuffer === '00' && now - lastInputTime < 1000) {
+          processInput();
+        } else if (inputBuffer.length === 2) {
+          processInput();
+        } else {
+          resetInputTimeout();
         }
+        lastInputTime = now;
       } else if (e.key === 'Escape') {
-        // Eingabe abbrechen
         inputBuffer = '';
         feedback.textContent = '';
       }
     });
 
-    // Fokus auf Container, damit Tastatur-Events funktionieren
-    container.focus();
-
-    // Initiales Setup
-    updateAnimation(parseInt(slider.value, 10));
-
-    // Update auch, wenn Regler mit Maus bewegt wird
     slider.addEventListener('input', () => {
-      const val = parseInt(slider.value, 10);
-      updateAnimation(val);
+      updateAnimation(parseInt(slider.value, 10));
     });
+
+    container.focus();
+    updateAnimation(100);
   </script>
 </body>
 </html>
