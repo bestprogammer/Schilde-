@@ -19,6 +19,7 @@
       position: relative;
       width: 300px;
       height: 300px;
+      outline: none; /* Für Fokus sichtbar machen, wenn nötig */
     }
     .death-star {
       width: 100%;
@@ -90,22 +91,22 @@
       font-family: monospace; z-index: 25;
     }
     .fire-animation {
-  display: none;
-  position: absolute;
-  top: 50%; left: 50%;
-  width: 250px; height: 250px;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 50;
-  background: radial-gradient(circle, #ffae00 0%, #ff3300 50%, rgba(0,0,0,0.1) 100%);
-  opacity: 0.8;
-  animation: explode 1s linear forwards;
-}
-@keyframes explode {
-  0%   { opacity: 0.8; transform: translate(-50%, -50%) scale(1);}
-  60%  { opacity: 1;   transform: translate(-50%, -50%) scale(1.5);}
-  100% { opacity: 0;   transform: translate(-50%, -50%) scale(2);}
-}
+      display: none;
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 250px; height: 250px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 50;
+      background: radial-gradient(circle, #ffae00 0%, #ff3300 50%, rgba(0,0,0,0.1) 100%);
+      opacity: 0.8;
+      animation: explode 1s linear forwards;
+    }
+    @keyframes explode {
+      0%   { opacity: 0.8; transform: translate(-50%, -50%) scale(1);}
+      60%  { opacity: 1;   transform: translate(-50%, -50%) scale(1.5);}
+      100% { opacity: 0;   transform: translate(-50%, -50%) scale(2);}
+    }
   </style>
 </head>
 <body>
@@ -123,135 +124,135 @@
     <audio id="hitSound" src="hit.wav"></audio>
   </div>
   <script>
-  const slider = document.getElementById('shieldRange');
-  const label = document.querySelector('.label');
-  const warning = document.querySelector('.warning');
-  const rings = document.querySelectorAll('.shield-ring');
-  const feedback = document.getElementById('inputFeedback');
-  const container = document.querySelector('.container');
-  const alarmSound = document.getElementById('alarmSound');
-  const hitSound = document.getElementById('hitSound');
-  const fireAnimation = document.getElementById('fireAnimation');
-    
-  let inputBuffer = '';
-  let inputTimeout;
-  let lastInputTime = 0;
-  let wasBelowThreshold = false;
-  let alarmPlaying = false;
-  let hitPlaying = false;
+    const slider = document.getElementById('shieldRange');
+    const label = document.querySelector('.label');
+    const warning = document.querySelector('.warning');
+    const rings = document.querySelectorAll('.shield-ring');
+    const feedback = document.getElementById('inputFeedback');
+    const container = document.querySelector('.container');
+    const alarmSound = document.getElementById('alarmSound');
+    const hitSound = document.getElementById('hitSound');
+    const fireAnimation = document.getElementById('fireAnimation');
 
-  function updateAnimation(value) {
-    label.textContent = `Schilde: ${value}%`;
-    slider.value = value;
+    let inputBuffer = '';
+    let inputTimeout;
+    let lastInputTime = 0;
+    let alarmPlaying = false;
+    let hitPlaying = false;
 
-    if (value === 0) {
-  triggerFireAnimation();
-}
-    
-    if (value < 11) {
-      if (!alarmPlaying) {
-        alarmSound.currentTime = 0;
-        alarmSound.play();
-        alarmPlaying = true;
-      }
-      warning.style.display = 'block';
-      label.style.color = 'red';
-      rings.forEach(ring => {
-        ring.style.animationName = 'blink-red';
-        ring.style.animationDuration = '1s';
-        ring.style.borderColor = 'rgba(255, 0, 0, 0.9)';
-        ring.style.opacity = '0.9';
-      });
-      
-      if (hitPlaying) {
-        hitSound.pause();
-        hitPlaying = false;
-      }
-    } else {
-      if (alarmPlaying) {
-        alarmSound.pause();
-        alarmSound.currentTime = 0;
-        alarmPlaying = false;
-      }
-      warning.style.display = 'none';
-      label.style.color = 'white';
-      const duration = 10 - (value / 100) * 9;
-      const opacity = (value / 100) * 0.8;
-      rings.forEach(ring => {
-        ring.style.animationName = 'pulse';
-        ring.style.animationDuration = `${duration}s`;
-        ring.style.borderColor = `rgba(0, 255, 255, ${opacity})`;
-        ring.style.opacity = opacity;
-      });
+    function updateAnimation(value) {
+      label.textContent = `Schilde: ${value}%`;
+      slider.value = value;
 
-      if (!hitPlaying) {
-        hitSound.currentTime = 0;
-        hitSound.play();
-        hitPlaying = true;
+      if (value === 0) {
+        triggerFireAnimation();
+      }
+
+      if (value < 11) {
+        if (!alarmPlaying) {
+          alarmSound.currentTime = 0;
+          alarmSound.play();
+          alarmPlaying = true;
+        }
+        warning.style.display = 'block';
+        label.style.color = 'red';
+        rings.forEach(ring => {
+          ring.style.animationName = 'blink-red';
+          ring.style.animationDuration = '1s';
+          ring.style.borderColor = 'rgba(255, 0, 0, 0.9)';
+          ring.style.opacity = '0.9';
+        });
+
+        if (hitPlaying) {
+          hitSound.pause();
+          hitPlaying = false;
+        }
+      } else {
+        if (alarmPlaying) {
+          alarmSound.pause();
+          alarmSound.currentTime = 0;
+          alarmPlaying = false;
+        }
+        warning.style.display = 'none';
+        label.style.color = 'white';
+        const duration = 10 - (value / 100) * 9;
+        const opacity = (value / 100) * 0.8;
+        rings.forEach(ring => {
+          ring.style.animationName = 'pulse';
+          ring.style.animationDuration = `${duration}s`;
+          ring.style.borderColor = `rgba(0, 255, 255, ${opacity})`;
+          ring.style.opacity = opacity;
+        });
+
+        if (!hitPlaying) {
+          hitSound.currentTime = 0;
+          hitSound.play();
+          hitPlaying = true;
+        }
       }
     }
-  }
 
-  function processInput() {
-    if (inputBuffer === '00') {
-      updateAnimation(100);
-      feedback.textContent = '';
-    } else {
-      let val = parseInt(inputBuffer, 10);
-      if (!isNaN(val) && val >= 0 && val <= 100) {
-        updateAnimation(val);
+    function processInput() {
+      if (inputBuffer === '00') {
+        updateAnimation(100);
         feedback.textContent = '';
       } else {
-        feedback.textContent = 'Ungültige Eingabe';
+        let val = parseInt(inputBuffer, 10);
+        if (!isNaN(val) && val >= 0 && val <= 100) {
+          updateAnimation(val);
+          feedback.textContent = '';
+        } else {
+          feedback.textContent = 'Ungültige Eingabe';
+        }
       }
-    }
-    inputBuffer = '';
-  }
-
-  function resetInputTimeout() {
-    if (inputTimeout) clearTimeout(inputTimeout);
-    inputTimeout = setTimeout(() => {
-      if (inputBuffer.length > 0) {
-        processInput();
-      }
-    }, 3000);
-  }
-
-  function triggerFireAnimation() {
-  fireAnimation.style.display = 'block';
-  fireAnimation.style.animation = 'none';
-  void fireAnimation.offsetWidth;
-  fireAnimation.style.animation = 'explode 1s linear forwards';
-  setTimeout(() => {
-    fireAnimation.style.display = 'none';
-  }, 1000);
-}  
-    
-  container.addEventListener('keydown', (e) => {
-    const now = Date.now();
-    if (e.key >= '0' && e.key <= '9') {
-      inputBuffer += e.key;
-      feedback.textContent = `Eingabe: ${inputBuffer}`;
-      if (inputBuffer === '00' && now - lastInputTime < 1000) {
-        processInput();
-      } else if (inputBuffer.length === 2) {
-        processInput();
-      } else {
-        resetInputTimeout();
-      }
-      lastInputTime = now;
-    } else if (e.key === 'Escape') {
       inputBuffer = '';
-      feedback.textContent = '';
     }
-  });
 
-  slider.addEventListener('input', () => {
-    updateAnimation(parseInt(slider.value, 10));
-  });
+    function resetInputTimeout() {
+      if (inputTimeout) clearTimeout(inputTimeout);
+      inputTimeout = setTimeout(() => {
+        if (inputBuffer.length > 0) {
+          processInput();
+        }
+      }, 3000);
+    }
 
-  container.focus();
-  updateAnimation(100);
-</script>
+    function triggerFireAnimation() {
+      fireAnimation.style.display = 'block';
+      fireAnimation.style.animation = 'none';
+      void fireAnimation.offsetWidth;
+      fireAnimation.style.animation = 'explode 1s linear forwards';
+      setTimeout(() => {
+        fireAnimation.style.display = 'none';
+      }, 1000);
+    }
+
+    container.addEventListener('keydown', (e) => {
+      const now = Date.now();
+      if (e.key >= '0' && e.key <= '9') {
+        inputBuffer += e.key;
+        feedback.textContent = `Eingabe: ${inputBuffer}`;
+
+        if (inputBuffer === '00' && now - lastInputTime < 1000) {
+          processInput();
+        } else if (inputBuffer.length === 2) {
+          processInput();
+        } else {
+          resetInputTimeout();
+        }
+        lastInputTime = now;
+      } else if (e.key === 'Escape') {
+        inputBuffer = '';
+        feedback.textContent = '';
+      }
+    });
+
+    slider.addEventListener('input', () => {
+      updateAnimation(parseInt(slider.value, 10));
+    });
+
+    container.focus();
+    updateAnimation(100);
+  </script>
 </body>
 </html>
