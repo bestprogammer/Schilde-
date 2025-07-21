@@ -1,260 +1,354 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Todesstern Schildsteuerung</title>
-  <style>
-    body {
-      margin: 0;
-      background-color: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      font-family: Arial, sans-serif;
-      color: white;
-    }
-    .container {
-      position: relative;
-      width: 300px;
-      height: 300px;
-      outline: none;
-    }
-    .death-star {
-      width: 100%;
-      height: 100%;
-      background: url('https://upload.wikimedia.org/wikipedia/en/f/f9/Death_star1.png') no-repeat center center;
-      background-size: contain;
-      border-radius: 50%;
-      position: relative;
-      z-index: 10;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-    }
-    .shield-ring {
-      position: absolute;
-      border: 2px solid rgba(0, 255, 255, 0.7);
-      border-radius: 50%;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.7);
-      opacity: 0.8;
-      pointer-events: none;
-      animation-name: pulse;
-      animation-iteration-count: infinite;
-      animation-timing-function: ease-out;
-    }
-    .ring1 { width: 320px; height: 320px; animation-delay: 0s; }
-    .ring2 { width: 360px; height: 360px; animation-delay: 1s; }
-    .ring3 { width: 400px; height: 400px; animation-delay: 2s; }
-    @keyframes pulse {
-      0% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.7); }
-      70% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
-      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
-    }
-    @keyframes blink-red {
-      0%, 100% { border-color: rgba(255, 0, 0, 0.9); opacity: 0.9; }
-      50% { border-color: rgba(255, 0, 0, 0.1); opacity: 0.1; }
-    }
-    .warning {
-      position: absolute;
-      top: 50%; left: 50%; transform: translate(-50%, -50%);
-      font-size: 2rem; font-weight: bold; color: red;
-      text-shadow: 0 0 10px red; z-index: 30; display: none;
-    }
-    .label {
-      position: absolute;
-      top: 10px; left: 50%; transform: translateX(-50%);
-      font-size: 1.5rem; font-weight: bold;
-      text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);
-      z-index: 20; transition: color 0.3s ease;
-    }
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 100%; height: 20px;
-      background: rgba(0, 255, 255, 0.2);
-      border-radius: 10px;
-      position: absolute; bottom: 10px; left: 0;
-      z-index: 20; cursor: pointer;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 30px; height: 30px;
-      background: #00ffff;
-      border-radius: 50%;
-      border: 1px solid #0ff;
-    }
-    .input-feedback {
-      position: absolute;
-      bottom: 50px; left: 50%; transform: translateX(-50%);
-      color: #0ff; font-size: 1rem;
-      font-family: monospace; z-index: 25;
-    }
-    /* Feuer Overlay */
-    .fire-overlay {
-      position: absolute;
-      top: 50%; left: 50%;
-      width: 280px; height: 280px;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 50;
-      background: radial-gradient(circle, #ffae00 0%, #ff3300 60%, rgba(0,0,0,0) 100%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      border-radius: 50%;
-      box-shadow: 0 0 30px 15px rgba(255, 100, 0, 0.7);
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Todesstern Schildsteuerung mit Identifikation und Foto</title>
+<style>
+  body {
+    margin: 0;
+    background-color: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+    color: white;
+    gap: 20px;
+    padding: 10px;
+  }
+  .container {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    outline: none;
+  }
+  .death-star {
+    width: 100%;
+    height: 100%;
+    background: url('https://upload.wikimedia.org/wikipedia/en/f/f9/Death_star1.png') no-repeat center center;
+    background-size: contain;
+    border-radius: 50%;
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+  }
+  .shield-ring {
+    position: absolute;
+    border: 2px solid rgba(0, 255, 255, 0.7);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 0.8;
+    pointer-events: none;
+    animation-name: pulse;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-out;
+  }
+  .ring1 { width: 320px; height: 320px; animation-delay: 0s; }
+  .ring2 { width: 360px; height: 360px; animation-delay: 1s; }
+  .ring3 { width: 400px; height: 400px; animation-delay: 2s; }
+  @keyframes pulse {
+    0% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.7); }
+    70% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.5); }
+  }
+  @keyframes blink-red {
+    0%, 100% { border-color: rgba(255, 0, 0, 0.9); opacity: 0.9; }
+    50% { border-color: rgba(255, 0, 0, 0.1); opacity: 0.1; }
+  }
+  .warning {
+    position: absolute;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 2rem; font-weight: bold; color: red;
+    text-shadow: 0 0 10px red; z-index: 30; display: none;
+  }
+  .label {
+    position: absolute;
+    top: 10px; left: 50%; transform: translateX(-50%);
+    font-size: 1.5rem; font-weight: bold;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.9);
+    z-index: 20; transition: color 0.3s ease;
+  }
+  .input-feedback {
+    color: #0ff;
+    font-family: monospace;
+    font-size: 1.2rem;
+    min-height: 1.5rem;
+    user-select: none;
+    margin-top: 10px;
+    text-align: center;
+  }
+  .fire-overlay {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 280px; height: 280px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 50;
+    background: radial-gradient(circle, #ffae00 0%, #ff3300 60%, rgba(0,0,0,0) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 50%;
+    box-shadow: 0 0 30px 15px rgba(255, 100, 0, 0.7);
+  }
+  #idInput {
+    padding: 10px 15px;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    border: none;
+    width: 150px;
+    text-align: center;
+    outline: none;
+    font-family: monospace;
+  }
+  #idInput:focus {
+    box-shadow: 0 0 10px #0ff;
+  }
+  .instructions {
+    font-size: 1rem;
+    color: #aaa;
+    user-select: none;
+    margin-bottom: 8px;
+  }
+  #videoStream {
+    display: none;
+    width: 300px;
+    border-radius: 10px;
+    margin-top: 20px;
+  }
+  #photoCanvas {
+    display: none;
+    border-radius: 10px;
+    margin-top: 10px;
+    border: 2px solid #0ff;
+  }
+  #downloadLink {
+    margin-top: 10px;
+    font-size: 1rem;
+    color: #0ff;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
-  <div class="container" tabindex="0">
-    <div class="label">Schilde: 100%</div>
+  <div class="instructions">Identifikationscode eingeben (z.B. 2014) und danach Schilde (0-100) per Tastatur eingeben.</div>
+  <input type="password" id="idInput" placeholder="ID-Code eingeben" maxlength="10" autocomplete="off" autofocus />
+  <div class="container" tabindex="0" aria-label="Todesstern Schildanzeige">
+    <div class="label">Schilde: --%</div>
     <div class="warning">⚠️ Achtung! Schilde kritisch! ⚠️</div>
     <div class="shield-ring ring1"></div>
     <div class="shield-ring ring2"></div>
     <div class="shield-ring ring3"></div>
     <div class="death-star"></div>
     <div class="fire-overlay" id="fireOverlay"></div>
-    <input type="range" min="0" max="100" value="100" id="shieldRange" />
-    <div class="input-feedback" id="inputFeedback"></div>
-    <audio id="alarmSound" src="alarm.wav"></audio>
-    <audio id="hitSound" src="hit.wav"></audio>
+    <div class="input-feedback" id="inputFeedback">ID-Code nicht eingegeben.</div>
   </div>
-  <script>
-    const slider = document.getElementById('shieldRange');
-    const label = document.querySelector('.label');
-    const warning = document.querySelector('.warning');
-    const rings = document.querySelectorAll('.shield-ring');
-    const feedback = document.getElementById('inputFeedback');
-    const container = document.querySelector('.container');
-    const alarmSound = document.getElementById('alarmSound');
-    const hitSound = document.getElementById('hitSound');
-    const fireOverlay = document.getElementById('fireOverlay');
 
-    let inputBuffer = '';
-    let inputTimeout;
-    let lastInputTime = 0;
-    let alarmPlaying = false;
-    let hitPlaying = false;
-    let fireActive = false;
+  <!-- Videoelement für Kamera -->
+  <video id="videoStream" autoplay playsinline></video>
+  <!-- Canvas für Foto -->
+  <canvas id="photoCanvas" width="300" height="300"></canvas>
+  <a id="downloadLink" href="#" download="kamerafoto.png" style="display:none;">Foto herunterladen</a>
 
-    function updateAnimation(value) {
-      label.textContent = `Schilde: ${value}%`;
-      slider.value = value;
+<script>
+  const idInput = document.getElementById('idInput');
+  const container = document.querySelector('.container');
+  const label = container.querySelector('.label');
+  const warning = container.querySelector('.warning');
+  const rings = container.querySelectorAll('.shield-ring');
+  const feedback = document.getElementById('inputFeedback');
+  const fireOverlay = document.getElementById('fireOverlay');
 
-      if (value === 0) {
-        // Feuer dauerhaft an
-        if (!fireActive) {
-          fireOverlay.style.opacity = '1';
-          fireActive = true;
-        }
-      } else {
-        // Feuer aus wenn nicht 0
-        if (fireActive) {
-          fireOverlay.style.opacity = '0';
-          fireActive = false;
-        }
+  const videoStream = document.getElementById('videoStream');
+  const photoCanvas = document.getElementById('photoCanvas');
+  const downloadLink = document.getElementById('downloadLink');
+  const ctx = photoCanvas.getContext('2d');
+
+  // Sounds optional
+  const alarmSound = new Audio('alarm.wav');
+  const hitSound = new Audio('hit.wav');
+
+  const correctId = '2014';
+
+  let shieldValue = null;
+  let idAccepted = false;
+  let inputBuffer = '';
+  let inputTimeout;
+  let alarmPlaying = false;
+  let hitPlaying = false;
+  let fireActive = false;
+
+  function updateAnimation(value) {
+    label.textContent = `Schilde: ${value}%`;
+    shieldValue = value;
+
+    if (value === 0) {
+      if (!fireActive) {
+        fireOverlay.style.opacity = '1';
+        fireActive = true;
       }
-
-      if (value <= 10) { // 0 bis 10 inklusive
-        if (!alarmPlaying) {
-          alarmSound.currentTime = 0;
-          alarmSound.play();
-          alarmPlaying = true;
-        }
-        warning.style.display = 'block';
-        label.style.color = 'red';
-        rings.forEach(ring => {
-          ring.style.animationName = 'blink-red';
-          ring.style.animationDuration = '1s';
-          ring.style.borderColor = 'rgba(255, 0, 0, 0.9)';
-          ring.style.opacity = '0.9';
-        });
-
-        if (hitPlaying) {
-          hitSound.pause();
-          hitPlaying = false;
-        }
-      } else {
-        if (alarmPlaying) {
-          alarmSound.pause();
-          alarmSound.currentTime = 0;
-          alarmPlaying = false;
-        }
-        warning.style.display = 'none';
-        label.style.color = 'white';
-
-        // Skaliere Pulsdauer und Opazität zwischen 11 und 100
-        const valNorm = (value - 11) / (100 - 11);
-        const duration = 10 - valNorm * 9; // 10s bis 1s
-        const opacity = valNorm * 0.8 + 0.2;
-
-        rings.forEach(ring => {
-          ring.style.animationName = 'pulse';
-          ring.style.animationDuration = `${duration}s`;
-          ring.style.borderColor = `rgba(0, 255, 255, ${opacity})`;
-          ring.style.opacity = opacity;
-        });
-
-        if (!hitPlaying) {
-          hitSound.currentTime = 0;
-          hitSound.play();
-          hitPlaying = true;
-        }
+    } else {
+      if (fireActive) {
+        fireOverlay.style.opacity = '0';
+        fireActive = false;
       }
     }
 
-    function processInput() {
+    if (value <= 10) {
+      if (!alarmPlaying) {
+        alarmSound.currentTime = 0;
+        alarmSound.play().catch(() => {});
+        alarmPlaying = true;
+      }
+      warning.style.display = 'block';
+      label.style.color = 'red';
+      rings.forEach(ring => {
+        ring.style.animationName = 'blink-red';
+        ring.style.animationDuration = '1s';
+        ring.style.borderColor = 'rgba(255, 0, 0, 0.9)';
+        ring.style.opacity = '0.9';
+      });
+
+      if (hitPlaying) {
+        hitSound.pause();
+        hitPlaying = false;
+      }
+    } else {
+      if (alarmPlaying) {
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+        alarmPlaying = false;
+      }
+      warning.style.display = 'none';
+      label.style.color = 'white';
+
+      const valNorm = (value - 11) / (100 - 11);
+      const duration = 10 - valNorm * 9;
+      const opacity = valNorm * 0.8 + 0.2;
+
+      rings.forEach(ring => {
+        ring.style.animationName = 'pulse';
+        ring.style.animationDuration = `${duration}s`;
+        ring.style.borderColor = `rgba(0, 255, 255, ${opacity})`;
+        ring.style.opacity = opacity;
+      });
+
+      if (!hitPlaying) {
+        hitSound.currentTime = 0;
+        hitSound.play().catch(() => {});
+        hitPlaying = true;
+      }
+    }
+  }
+
+  function processShieldInput() {
+    if (inputBuffer === '00') {
+      updateAnimation(100);
+      feedback.textContent = '';
+    } else {
+      let val = parseInt(inputBuffer, 10);
+      if (!isNaN(val) && val >= 0 && val <= 100) {
+        updateAnimation(val);
+        feedback.textContent = '';
+      } else {
+        feedback.textContent = 'Ungültige Eingabe';
+      }
+    }
+    inputBuffer = '';
+  }
+
+  function resetInputTimeout() {
+    if (inputTimeout) clearTimeout(inputTimeout);
+    inputTimeout = setTimeout(() => {
+      if (inputBuffer.length > 0) {
+        processShieldInput();
+      }
+    }, 1500);
+  }
+
+  // Funktion um Foto zu machen, mit Zeit/Datum drauf
+  async function takePhoto() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 300, height: 300 }, audio: false });
+      videoStream.srcObject = stream;
+      videoStream.style.display = 'block';
+
+      // Warte kurz, damit Video lädt
+      await new Promise(r => setTimeout(r, 500));
+
+      // Foto zeichnen
+      ctx.drawImage(videoStream, 0, 0, photoCanvas.width, photoCanvas.height);
+
+      // Zeitstempel auf das Bild
+      const now = new Date();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(0, photoCanvas.height - 30, photoCanvas.width, 30);
+      ctx.fillStyle = 'lime';
+      ctx.font = '16px monospace';
+      ctx.fillText(now.toLocaleString('de-DE'), 10, photoCanvas.height - 10);
+
+      photoCanvas.style.display = 'block';
+
+      // Download-Link erstellen
+      const dataUrl = photoCanvas.toDataURL('image/png');
+      downloadLink.href = dataUrl;
+      downloadLink.style.display = 'inline-block';
+
+      // Kamera-Stream stoppen (sonst bleibt sie an)
+      stream.getTracks().forEach(track => track.stop());
+      videoStream.style.display = 'none';
+
+    } catch (err) {
+      feedback.textContent = 'Kamera konnte nicht geöffnet werden: ' + err.message;
+    }
+  }
+
+  // Eingabe für Schilde nur wenn ID akzeptiert
+  container.addEventListener('keydown', (e) => {
+    if (!idAccepted) return;
+
+    if (e.key >= '0' && e.key <= '9') {
+      inputBuffer += e.key;
+      feedback.textContent = `Eingabe: ${inputBuffer}`;
+
       if (inputBuffer === '00') {
-        updateAnimation(100);
-        feedback.textContent = '';
+        processShieldInput();
+      } else if (inputBuffer.length === 2) {
+        processShieldInput();
       } else {
-        let val = parseInt(inputBuffer, 10);
-        if (!isNaN(val) && val >= 0 && val <= 100) {
-          updateAnimation(val);
-          feedback.textContent = '';
-        } else {
-          feedback.textContent = 'Ungültige Eingabe';
-        }
+        resetInputTimeout();
       }
+    } else if (e.key === 'Escape') {
       inputBuffer = '';
+      feedback.textContent = '';
     }
+  });
 
-    function resetInputTimeout() {
-      if (inputTimeout) clearTimeout(inputTimeout);
-      inputTimeout = setTimeout(() => {
-        if (inputBuffer.length > 0) {
-          processInput();
-        }
-      }, 3000);
+  // ID-Code Live check
+  idInput.addEventListener('input', () => {
+    if (idInput.value === correctId) {
+      idAccepted = true;
+      feedback.textContent = 'ID akzeptiert. Schildeingabe möglich.';
+      label.textContent = 'Schilde: 100%';
+      updateAnimation(100);
+      idInput.disabled = true;
+      container.focus();
+
+      // Foto machen bei erfolgreicher ID-Eingabe
+      takePhoto();
+
+    } else {
+      idAccepted = false;
+      feedback.textContent = 'ID-Code nicht korrekt.';
     }
+  });
 
-    container.addEventListener('keydown', (e) => {
-      const now = Date.now();
-      if (e.key >= '0' && e.key <= '9') {
-        inputBuffer += e.key;
-        feedback.textContent = `Eingabe: ${inputBuffer}`;
-
-        if (inputBuffer === '00' && now - lastInputTime < 1000) {
-          processInput();
-        } else if (inputBuffer.length === 2) {
-          processInput();
-        } else {
-          resetInputTimeout();
-        }
-        lastInputTime = now;
-      } else if (e.key === 'Escape') {
-        inputBuffer = '';
-        feedback.textContent = '';
-      }
-    });
-
-    slider.addEventListener('input', () => {
-      updateAnimation(parseInt(slider.value, 10));
-    });
-
-    container.focus();
-    updateAnimation(100);
-  </script>
+  // Startzustand
+  feedback.textContent = 'ID-Code nicht eingegeben.';
+  label.textContent = 'Schilde: --%';
+</script>
 </body>
 </html>
