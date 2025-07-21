@@ -30,7 +30,6 @@
       position: relative;
       z-index: 10;
       box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-      transition: filter 0.3s ease;
     }
     .shield-ring {
       position: absolute;
@@ -44,7 +43,6 @@
       animation-name: pulse;
       animation-iteration-count: infinite;
       animation-timing-function: ease-out;
-      transition: border-color 0.3s ease, opacity 0.3s ease;
     }
     .ring1 { width: 320px; height: 320px; animation-delay: 0s; }
     .ring2 { width: 360px; height: 360px; animation-delay: 1s; }
@@ -92,29 +90,19 @@
       color: #0ff; font-size: 1rem;
       font-family: monospace; z-index: 25;
     }
+    /* Feuer Overlay */
     .fire-overlay {
-      pointer-events: none;
       position: absolute;
       top: 50%; left: 50%;
-      width: 300px;
-      height: 300px;
-      background: radial-gradient(circle, #ff4500 0%, #ff0000 60%, transparent 80%);
-      border-radius: 50%;
-      filter: blur(12px);
+      width: 280px; height: 280px;
       transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 50;
+      background: radial-gradient(circle, #ffae00 0%, #ff3300 60%, rgba(0,0,0,0) 100%);
       opacity: 0;
-      transition: opacity 0.5s ease;
-      z-index: 40;
-    }
-    @keyframes explosion-scale {
-      0% {
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-      }
-      100% {
-        transform: translate(-50%, -50%) scale(3);
-        opacity: 0;
-      }
+      transition: opacity 0.3s ease;
+      border-radius: 50%;
+      box-shadow: 0 0 30px 15px rgba(255, 100, 0, 0.7);
     }
   </style>
 </head>
@@ -142,7 +130,6 @@
     const alarmSound = document.getElementById('alarmSound');
     const hitSound = document.getElementById('hitSound');
     const fireOverlay = document.getElementById('fireOverlay');
-    const deathStar = document.querySelector('.death-star');
 
     let inputBuffer = '';
     let inputTimeout;
@@ -151,33 +138,25 @@
     let hitPlaying = false;
     let fireActive = false;
 
-    function triggerExplosion() {
-      // Explosionseffekt einmalig auslösen (hier nur optisch angedeutet)
-      deathStar.style.filter = 'brightness(1.8) saturate(2) drop-shadow(0 0 15px orange)';
-      setTimeout(() => {
-        deathStar.style.filter = '';
-      }, 1000);
-    }
-
     function updateAnimation(value) {
       label.textContent = `Schilde: ${value}%`;
       slider.value = value;
 
       if (value === 0) {
-        triggerExplosion();
-
+        // Feuer dauerhaft an
         if (!fireActive) {
           fireOverlay.style.opacity = '1';
           fireActive = true;
         }
       } else {
+        // Feuer aus wenn nicht 0
         if (fireActive) {
           fireOverlay.style.opacity = '0';
           fireActive = false;
         }
       }
 
-      if (value < 11 && value > 0) {
+      if (value <= 10) { // 0 bis 10 inklusive
         if (!alarmPlaying) {
           alarmSound.currentTime = 0;
           alarmSound.play();
@@ -196,7 +175,7 @@
           hitSound.pause();
           hitPlaying = false;
         }
-      } else if (value >= 11) {
+      } else {
         if (alarmPlaying) {
           alarmSound.pause();
           alarmSound.currentTime = 0;
@@ -205,9 +184,10 @@
         warning.style.display = 'none';
         label.style.color = 'white';
 
-        // Animation anpassen je nach Wert
-        const duration = 10 - ((value - 11) / 89) * 9;
-        const opacity = ((value - 11) / 89) * 0.8 + 0.2;
+        // Skaliere Pulsdauer und Opazität zwischen 11 und 100
+        const valNorm = (value - 11) / (100 - 11);
+        const duration = 10 - valNorm * 9; // 10s bis 1s
+        const opacity = valNorm * 0.8 + 0.2;
 
         rings.forEach(ring => {
           ring.style.animationName = 'pulse';
@@ -221,10 +201,6 @@
           hitSound.play();
           hitPlaying = true;
         }
-      } else if (value === 0) {
-        // Keine weiteren Aktionen
-      } else {
-        // Für Werte 1-10 (behandelt oben)
       }
     }
 
