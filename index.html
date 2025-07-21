@@ -153,171 +153,133 @@
     SYSTEM GESPERRT<br>Bitte Code erneut eingeben, um zu entsperren.
   </div>
 
-<script>(() => {
-  const codeInput = document.getElementById('codeInput');
-  const blockedOverlay = document.getElementById('blockedOverlay');
-  const container = document.querySelector('.container');
-  const shieldLabel = document.getElementById('shieldLabel');
-  const warningText = document.getElementById('warningText');
+<script>
+  const slider = document.getElementById('shieldRange');
+  const label = document.querySelector('.label');
+  const warning = document.querySelector('.warning');
   const rings = document.querySelectorAll('.shield-ring');
-  const fireAnimation = document.getElementById('fireAnimation');
-  const inputFeedback = document.getElementById('inputFeedback');
-  const video = document.getElementById('video');
+  const feedback = document.getElementById('inputFeedback');
+  const container = document.querySelector('.container');
+  const alarmSound = document.getElementById('alarmSound');
+  const hitSound = document.getElementById('hitSound');
 
-  const SECRET_CODE = "2014";
+  let inputBuffer = '';
+  let inputTimeout;
+  let lastInputTime = 0;
+  let wasBelowThreshold = false;
+  let alarmPlaying = false;
+  let hitPlaying = false;
+  let locked = false;
 
-  let shieldValue = 100;
-  let unlocked = false;
-  let blockMode = true; // Direkt bei Start gesperrt
-  let zeroPressTimes = [];
-
-  function focusInput() {
-    codeInput.focus();
-    setTimeout(() => codeInput.focus(), 100); // Sicherstellen, dass es fokussiert bleibt
-  }
-
-  // Kamera starten
-  async function startCamera() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({video: true});
-      video.srcObject = stream;
-    } catch(e) {
-      console.warn('Kamera nicht verfügbar.');
+  function updateAnimation(value) {
+    if (locked) {
+      feedback.textContent = '⛔ Schilde gesperrt!';
+      return;
     }
-  }
-  startCamera();
 
-  function takeSnapshot() {
-    if (!video.srcObject) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    canvas.toBlob(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `snapshot_${new Date().toISOString().replace(/[:.]/g,'-')}.png`;
-      a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
-  }
+    label.textContent = `Schilde: ${value}%`;
+    slider.value = value;
 
-  function updateStatus() {
-    shieldLabel.textContent = `Schilde: ${shieldValue}%`;
-
-    if (shieldValue <= 10) {
-      rings.forEach(r => {
-        r.style.borderColor = 'rgba(255, 0, 0, 0.9)';
-        r.style.animationName = 'blink-red';
+    if (value < 9) {
+      if (!alarmPlaying) {
+        alarmSound.currentTime = 0;
+        alarmSound.play();
+        alarmPlaying = true;
+      }
+      warning.style.display = 'block';
+      label.style.color = 'red';
+      rings.forEach(ring => {
+        ring.style.animationName = 'blink-red';
+        ring.style.animationDuration = '1s';
+        ring.style.borderColor = 'rgba(255, 0, 0, 0.9)';
+        ring.style.opacity = '0.9';
       });
-      warningText.style.display = 'block';
+
+      if (hitPlaying) {
+        hitSound.pause();
+        hitPlaying = false;
+      }
     } else {
-      rings.forEach(r => {
-        r.style.borderColor = 'rgba(0, 255, 255, 0.7)';
-        r.style.animationName = 'pulse';
+      if (alarmPlaying) {
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+        alarmPlaying = false;
+      }
+      warning.style.display = 'none';
+      label.style.color = 'white';
+      const duration = 10 - (value / 100) * 9;
+      const opacity = (value / 100) * 0.8;
+      rings.forEach(ring => {
+        ring.style.animationName = 'pulse';
+        ring.style.animationDuration = `${duration}s`;
+        ring.style.borderColor = `rgba(0, 255, 255, ${opacity})`;
+        ring.style.opacity = opacity;
       });
-      warningText.style.display = 'none';
-    }
 
-    if (shieldValue <= 0) {
-      fireAnimation.style.display = 'block';
-      setTimeout(() => {
-        fireAnimation.style.display = 'none';
-      }, 1200);
-      activateBlock();
-    }
-  }
-
-  function activateBlock() {
-    blockMode = true;
-    unlocked = false;
-    shieldValue = 0;
-    updateStatus();
-    blockedOverlay.style.display = 'flex';
-    inputFeedback.textContent = '';
-    codeInput.value = '';
-    codeInput.style.display = 'block';
-    focusInput();
-  }
-
-  function deactivateBlock() {
-    blockMode = false;
-    unlocked = true;
-    shieldValue = 100;
-    updateStatus();
-    blockedOverlay.style.display = 'none';
-    inputFeedback.textContent = 'System entsperrt';
-    takeSnapshot();
-    setTimeout(() => inputFeedback.textContent = '', 2500);
-    codeInput.value = '';
-    focusInput();
-  }
-
-  function checkCode(val) {
-    if (val === SECRET_CODE) {
-      if (blockMode) deactivateBlock();
-      else if (!unlocked) {
-        unlocked = true;
-        shieldValue = 100;
-        updateStatus();
-        blockedOverlay.style.display = 'none';
-      }
-      takeSnapshot();
-      inputFeedback.textContent = 'Code korrekt!';
-      setTimeout(() => inputFeedback.textContent = '', 2000);
-      codeInput.value = '';
-    }
-  }
-
-  function checkZeroSequence(key) {
-    if (key === "0") {
-      const now = Date.now();
-      zeroPressTimes.push(now);
-      if (zeroPressTimes.length > 4) zeroPressTimes.shift();
-      if (zeroPressTimes.length === 4 && zeroPressTimes[3] - zeroPressTimes[0] <= 1000) {
-        activateBlock();
-        zeroPressTimes = [];
-      }
-    } else {
-      zeroPressTimes = [];
-    }
-  }
-
-  codeInput.addEventListener('input', e => {
-    const val = codeInput.value;
-
-    if (blockMode) {
-      checkCode(val);
-    } else {
-      checkZeroSequence(val.slice(-1));
-      if (val.includes("0000")) {
-        activateBlock();
-        return;
-      }
-
-      checkCode(val);
-
-      if (unlocked && /^\d{1,3}$/.test(val)) {
-        if (val === "00") {
-          shieldValue = 100;
-        } else {
-          let num = parseInt(val, 10);
-          if (num >= 0 && num <= 100) shieldValue = num;
-        }
-        updateStatus();
+      if (!hitPlaying) {
+        hitSound.currentTime = 0;
+        hitSound.play();
+        hitPlaying = true;
       }
     }
-    focusInput();
+  }
+
+  function processInput() {
+    if (inputBuffer === '00') {
+      updateAnimation(100);
+      feedback.textContent = '';
+    } else if (inputBuffer === '0000') {
+      locked = true;
+      feedback.textContent = '🛑 Schilde gesperrt!';
+    } else if (inputBuffer === '2014') {
+      locked = false;
+      feedback.textContent = '✅ Schilde entsperrt';
+    } else if (inputBuffer.length >= 2) {
+      let val = parseInt(inputBuffer.slice(-2), 10);
+      if (!isNaN(val) && val >= 0 && val <= 100) {
+        updateAnimation(val);
+        feedback.textContent = '';
+      } else {
+        feedback.textContent = 'Ungültige Eingabe';
+      }
+    } else if (inputBuffer.length === 1) {
+      let val = parseInt(inputBuffer, 10);
+      if (!isNaN(val)) {
+        updateAnimation(slider.value);
+        feedback.textContent = `Letzter Wert bleibt: ${slider.value}`;
+      }
+    }
+    inputBuffer = '';
+  }
+
+  function resetInputTimeout() {
+    if (inputTimeout) clearTimeout(inputTimeout);
+    inputTimeout = setTimeout(() => {
+      processInput();
+    }, 1500);
+  }
+
+  container.addEventListener('keydown', (e) => {
+    const now = Date.now();
+    if (e.key >= '0' && e.key <= '9') {
+      inputBuffer += e.key;
+      feedback.textContent = `Eingabe: ${inputBuffer}`;
+      resetInputTimeout();
+      lastInputTime = now;
+    } else if (e.key === 'Escape') {
+      inputBuffer = '';
+      feedback.textContent = '';
+    }
   });
 
-  // Initialisierung
-  updateStatus();
-  codeInput.style.display = 'block';
-  blockedOverlay.style.display = 'flex';
-  focusInput();
-})();
+  slider.addEventListener('input', () => {
+    if (!locked) updateAnimation(parseInt(slider.value, 10));
+    else slider.value = slider.value;
+  });
+
+  container.focus();
+  updateAnimation(100);
 </script>
+
 </body>
 </html>
