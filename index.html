@@ -238,19 +238,22 @@
     blockedOverlay.style.display = 'flex';
     inputFeedback.textContent = '';
     codeInput.value = '';
+    // Codefeld wieder anzeigen, falls vorher versteckt
+    document.getElementById('codeInputContainer').style.display = 'block';
   }
 
   function deactivateBlock() {
-  blockMode = false;
-  unlocked = true;
-  shieldValue = 100;
-  updateStatus();
-  blockedOverlay.style.display = 'none';
-  inputFeedback.textContent = 'System entsperrt';
-  takeSnapshot(); // ← Foto auch bei erneutem Entsperren
-  setTimeout(() => inputFeedback.textContent = '', 2500);
-}
-
+    blockMode = false;
+    unlocked = true;
+    shieldValue = 100;
+    updateStatus();
+    blockedOverlay.style.display = 'none';
+    inputFeedback.textContent = 'System entsperrt';
+    takeSnapshot(); // Foto bei Entsperren
+    // Codefeld nach Entsperren ausblenden
+    document.getElementById('codeInputContainer').style.display = 'none';
+    setTimeout(() => inputFeedback.textContent = '', 2500);
+  }
 
   function checkCode(val) {
     if (val === SECRET_CODE) {
@@ -263,6 +266,8 @@
       }
       takeSnapshot();
       inputFeedback.textContent = 'Code korrekt! System entsperrt.';
+      // Eingabefeld ausblenden ohne Wartezeit
+      document.getElementById('codeInputContainer').style.display = 'none';
       setTimeout(() => inputFeedback.textContent = '', 2500);
       codeInput.value = '';
     }
@@ -301,17 +306,6 @@
 
       // Schilde setzen wenn Eingabe Zahl (ohne Codeeingabe-Logik)
       if (unlocked && /^\d{1,3}$/.test(val)) {
-         if (val === "00") {
-        shieldValue = 100;
-        } else {
-         let num = parseInt(val, 10);
-    if (num >= 0 && num <= 100) {
-      shieldValue = num;
-    }
-  }
-  updateStatus();
-}
-
         if (val === "00") {
           shieldValue = 100;
         } else {
