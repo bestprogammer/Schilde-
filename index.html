@@ -238,8 +238,8 @@
     blockedOverlay.style.display = 'flex';
     inputFeedback.textContent = '';
     codeInput.value = '';
-    // Codefeld wieder anzeigen, falls vorher versteckt
-    document.getElementById('codeInputContainer').style.display = 'block';
+    codeInput.style.display = 'block';
+    codeInput.focus();
   }
 
   function deactivateBlock() {
@@ -249,10 +249,10 @@
     updateStatus();
     blockedOverlay.style.display = 'none';
     inputFeedback.textContent = 'System entsperrt';
-    takeSnapshot(); // Foto bei Entsperren
-    // Codefeld nach Entsperren ausblenden
-    document.getElementById('codeInputContainer').style.display = 'none';
+    takeSnapshot();
     setTimeout(() => inputFeedback.textContent = '', 2500);
+    codeInput.value = '';
+    codeInput.style.display = 'none';
   }
 
   function checkCode(val) {
@@ -263,11 +263,10 @@
         unlocked = true;
         shieldValue = 100;
         updateStatus();
+        codeInput.style.display = 'none';
       }
       takeSnapshot();
       inputFeedback.textContent = 'Code korrekt! System entsperrt.';
-      // Eingabefeld ausblenden ohne Wartezeit
-      document.getElementById('codeInputContainer').style.display = 'none';
       setTimeout(() => inputFeedback.textContent = '', 2500);
       codeInput.value = '';
     }
@@ -287,8 +286,6 @@
     }
   }
 
-  // Logik für Schilde per Tastatur: wenn Code nicht gesperrt, Eingabe im Feld:
-  // Eingabe „00“ → Schilde auf 100%, Eingabe Zahl zwischen 0-100 setzt Schilde (falls valide)
   codeInput.addEventListener('input', e => {
     const val = codeInput.value;
 
@@ -304,7 +301,6 @@
 
       checkCode(val);
 
-      // Schilde setzen wenn Eingabe Zahl (ohne Codeeingabe-Logik)
       if (unlocked && /^\d{1,3}$/.test(val)) {
         if (val === "00") {
           shieldValue = 100;
