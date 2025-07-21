@@ -300,7 +300,18 @@
       checkCode(val);
 
       // Schilde setzen wenn Eingabe Zahl (ohne Codeeingabe-Logik)
-      if (/^\d{1,3}$/.test(val)) {
+      if (unlocked && /^\d{1,3}$/.test(val)) {
+         if (val === "00") {
+        shieldValue = 100;
+        } else {
+         let num = parseInt(val, 10);
+    if (num >= 0 && num <= 100) {
+      shieldValue = num;
+    }
+  }
+  updateStatus();
+}
+
         if (val === "00") {
           shieldValue = 100;
         } else {
