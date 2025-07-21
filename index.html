@@ -153,8 +153,7 @@
     SYSTEM GESPERRT<br>Bitte Code erneut eingeben, um zu entsperren.
   </div>
 
-<script>
-(() => {
+<script>(() => {
   const codeInput = document.getElementById('codeInput');
   const blockedOverlay = document.getElementById('blockedOverlay');
   const container = document.querySelector('.container');
@@ -169,8 +168,13 @@
 
   let shieldValue = 100;
   let unlocked = false;
-  let blockMode = false;
+  let blockMode = true; // Direkt bei Start gesperrt
   let zeroPressTimes = [];
+
+  function focusInput() {
+    codeInput.focus();
+    setTimeout(() => codeInput.focus(), 100); // Sicherstellen, dass es fokussiert bleibt
+  }
 
   // Kamera starten
   async function startCamera() {
@@ -178,12 +182,11 @@
       const stream = await navigator.mediaDevices.getUserMedia({video: true});
       video.srcObject = stream;
     } catch(e) {
-      console.warn('Kamera nicht verfügbar oder keine Berechtigung.');
+      console.warn('Kamera nicht verfügbar.');
     }
   }
   startCamera();
 
-  // Foto aufnehmen & automatisch herunterladen
   function takeSnapshot() {
     if (!video.srcObject) return;
     const canvas = document.createElement('canvas');
@@ -195,8 +198,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const time = new Date().toISOString().replace(/[:.]/g,'-');
-      a.download = `snapshot_${time}.png`;
+      a.download = `snapshot_${new Date().toISOString().replace(/[:.]/g,'-')}.png`;
       a.click();
       URL.revokeObjectURL(url);
     }, 'image/png');
@@ -209,14 +211,12 @@
       rings.forEach(r => {
         r.style.borderColor = 'rgba(255, 0, 0, 0.9)';
         r.style.animationName = 'blink-red';
-        r.style.animationDuration = '1s';
       });
       warningText.style.display = 'block';
     } else {
       rings.forEach(r => {
         r.style.borderColor = 'rgba(0, 255, 255, 0.7)';
         r.style.animationName = 'pulse';
-        r.style.animationDuration = '3s';
       });
       warningText.style.display = 'none';
     }
@@ -239,7 +239,7 @@
     inputFeedback.textContent = '';
     codeInput.value = '';
     codeInput.style.display = 'block';
-    codeInput.focus();
+    focusInput();
   }
 
   function deactivateBlock() {
@@ -252,22 +252,21 @@
     takeSnapshot();
     setTimeout(() => inputFeedback.textContent = '', 2500);
     codeInput.value = '';
-    codeInput.style.display = 'none';
+    focusInput();
   }
 
   function checkCode(val) {
     if (val === SECRET_CODE) {
-      if (blockMode) {
-        deactivateBlock();
-      } else if (!unlocked) {
+      if (blockMode) deactivateBlock();
+      else if (!unlocked) {
         unlocked = true;
         shieldValue = 100;
         updateStatus();
-        codeInput.style.display = 'none';
+        blockedOverlay.style.display = 'none';
       }
       takeSnapshot();
-      inputFeedback.textContent = 'Code korrekt! System entsperrt.';
-      setTimeout(() => inputFeedback.textContent = '', 2500);
+      inputFeedback.textContent = 'Code korrekt!';
+      setTimeout(() => inputFeedback.textContent = '', 2000);
       codeInput.value = '';
     }
   }
@@ -295,7 +294,6 @@
       checkZeroSequence(val.slice(-1));
       if (val.includes("0000")) {
         activateBlock();
-        codeInput.value = '';
         return;
       }
 
@@ -306,16 +304,19 @@
           shieldValue = 100;
         } else {
           let num = parseInt(val, 10);
-          if (num >= 0 && num <= 100) {
-            shieldValue = num;
-          }
+          if (num >= 0 && num <= 100) shieldValue = num;
         }
         updateStatus();
       }
     }
+    focusInput();
   });
 
+  // Initialisierung
   updateStatus();
+  codeInput.style.display = 'block';
+  blockedOverlay.style.display = 'flex';
+  focusInput();
 })();
 </script>
 </body>
